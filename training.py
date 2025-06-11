@@ -3,7 +3,7 @@ from typing import Dict, List
 
 import numpy as np
 import torch
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 
 from model import CustomModel
 
@@ -59,7 +59,7 @@ def train_model(
         with torch.no_grad():
             y_pred = model(torch_features)
             metrics = {
-                t: mean_squared_error(
+                t: mean_absolute_error(
                     y_pred=y_pred.numpy()[:, t],
                     y_true=torch_targets.numpy()[:, t],
                 )
