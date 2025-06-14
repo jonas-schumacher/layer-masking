@@ -1,13 +1,17 @@
-# Layer Masking in PyTorch
+# Neural Network Layer Masking in PyTorch
 
-### Quickstart:
+### Documentation
 
-- Create virtual environment
+- Check out my story on Medium:
+
+### Code Quickstart
+
+- Create virtual environment (I tested the code with `Python 3.11`)
+- Install required packages: `pip install -r requirements.txt`
+- Run code: `python run_masking.py`
+
+### Troubleshooting
+
 - For the `graphviz` pip package to run properly, you first need to install Graphviz on your
   system: https://www.graphviz.org/download/
-
-### Versions
-
-- I tested the code with `Python 3.11` and the package versions in the `requirements.txt`.
-- But the code should also be
-  runnable with older & newer versions. 
+- However, graphviz was only required for the documentation, so you can also remove those parts from the code
