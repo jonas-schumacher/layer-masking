@@ -35,6 +35,10 @@ def train_model(
         mask=torch_mask,
     )
 
+    print(
+        f"Masked weights before training: {model.masked_layer.weight.detach()[torch_mask==0.0]}"
+    )
+
     loss_function = torch.nn.MSELoss()
 
     optimizer = torch.optim.LBFGS(
@@ -77,6 +81,10 @@ def train_model(
 
     training_results = TrainingResults(
         loss_timeseries=loss_timeseries, trained_weights=trained_weights
+    )
+
+    print(
+        f"Masked weights after training: {model.masked_layer.weight.detach()[torch_mask==0.0]}"
     )
 
     return training_results

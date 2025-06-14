@@ -141,33 +141,37 @@ def create_masks(
         data=0.0,
     )
 
+    # Use Case 0: No mask:
+    mask0 = base_mask.copy(deep=True)
+    mask0.loc[:, :] = 1.0
+
     # Use Case 1: Separate linear regression:
     mask1 = base_mask.copy(deep=True)
     for time_step in future_steps:
         # Allow each target Y in the future to access its feature X from the same time step:
         mask1.loc[(time_step, Y), (time_step, X)] = 1.0
 
-    # Use Case 2: Separate linear regression with autoregressive input from the past
+    # Use Case 2: Share X across time
     mask2 = base_mask.copy(deep=True)
+    # Allow each target in the future to access all features from any time step:
+    mask2.loc[(future_steps, Y), (combined_steps, X)] = 1.0
+
+    # Use Case 3: Separate linear regression with autoregressive input from the past
+    mask3 = base_mask.copy(deep=True)
     for time_step in future_steps:
         # Allow each target in the future to access its features from the same time step:
-        mask2.loc[(time_step, Y), (time_step, X)] = 1.0
+        mask3.loc[(time_step, Y), (time_step, X)] = 1.0
     # Additionally allow access to targets from the past
-    mask2.loc[(future_steps, Y), (past_steps, Y)] = 1.0
+    mask3.loc[(future_steps, Y), (past_steps, Y)] = 1.0
 
-    # Use Case 3: Share features across time
-    mask3 = base_mask.copy(deep=True)
-    # Allow each target in the future to access all features from any time step:
-    mask3.loc[(future_steps, Y), (combined_steps, X)] = 1.0
-
-    # Use Case 4: Share features across time and allow autoregressive input from the past
+    # Use Case 4: Share X across time and allow autoregressive input from the past
     mask4 = base_mask.copy(deep=True)
     # Allow access to all features (like use case 2)
     mask4.loc[(future_steps, Y), (combined_steps, X)] = 1.0
     # Additionally allow access to targets from the past
     mask4.loc[(future_steps, Y), (past_steps, Y)] = 1.0
 
-    return mask1, mask2, mask3, mask4
+    return mask0, mask1, mask2, mask3, mask4
 
 
 def run_training(
@@ -175,7 +179,7 @@ def run_training(
     targets: pd.DataFrame,
     mask: pd.DataFrame,
     mask_index: int,
-) -> None:
+) -> pd.Series:
     training_results = train_model(
         features=features.values,
         targets=targets.values,
@@ -183,8 +187,13 @@ def run_training(
     )
 
     loss_timeseries = pd.DataFrame(training_results.loss_timeseries).round(decimals=2)
+
+    final_metrics = loss_timeseries.copy(deep=True)
+    final_metrics.columns = [f"Forecast t={col+1}" for col in final_metrics.columns]
+    final_metrics = final_metrics.iloc[-1].rename(f"Mask {mask_index}")
+
     loss_timeseries.columns = [
-        f"Forecast t={col} (final MAE = {loss_timeseries.loc[len(loss_timeseries)-1, col]})"
+        f"Forecast t={col+1} (final MAE = {loss_timeseries.loc[len(loss_timeseries)-1, col]})"
         for col in loss_timeseries.columns
     ]
 
@@ -210,23 +219,44 @@ def run_training(
         trained_weights=trained_weights,
     )
 
+    return final_metrics
+
+    # if mask_index == 0:
+    #     plot_trained_weights(
+    #         mask=mask,
+    #         mask_index="empty",
+    #         trained_weights=pd.DataFrame(
+    #             data="", columns=trained_weights.columns, index=trained_weights.index
+    #         ),
+    #     )
+
 
 def main() -> None:
 
     features, targets = create_dataset()
 
-    mask1, mask2, mask3, mask4 = create_masks(
+    mask0, mask1, mask2, mask3, mask4 = create_masks(
         features=features,
         targets=targets,
     )
 
-    for mask_index, mask in enumerate([mask1, mask2, mask3, mask4], start=1):
-        run_training(
+    final_metrics_list = []
+
+    for mask_index, mask in enumerate([mask0, mask1, mask2, mask3, mask4], start=0):
+        final_metrics = run_training(
             features=features,
             targets=targets,
             mask=mask,
             mask_index=mask_index,
         )
+        final_metrics_list.append(final_metrics)
+
+    final_metrics_timeseries = pd.concat(final_metrics_list, axis=1)
+    final_metrics_timeseries.T.plot(style="o--")
+    plt.xlabel("Implemented Mask")
+    plt.ylabel("Mean Absolute Error (MAE)")
+    plt.title(f"Final comparison between masks")
+    plt.savefig(f"{RESULTS_DIR}/loss_comparison.png")
 
 
 if __name__ == "__main__":
