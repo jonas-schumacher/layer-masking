@@ -20,11 +20,10 @@ class TrainingResults:
 
 
 def train_model(
-    features: np.ndarray,
-    targets: np.ndarray,
-    mask: np.ndarray,
+        features: np.ndarray,
+        targets: np.ndarray,
+        mask: np.ndarray,
 ) -> TrainingResults:
-
     torch_features = torch.tensor(features, dtype=torch.float32)
     torch_targets = torch.tensor(targets, dtype=torch.float32)
     torch_mask = torch.tensor(mask, dtype=torch.float32)
@@ -36,8 +35,9 @@ def train_model(
     )
 
     print(
-        f"Masked weights before training: {model.masked_layer.weight.detach()[torch_mask==0.0]}"
+        f"Masked weights before training: {model.masked_layer.weight.detach()[torch_mask == 0.0]}"
     )
+    print(f"Bias before training: {model.masked_layer.bias}")
 
     loss_function = torch.nn.MSELoss()
 
@@ -84,7 +84,9 @@ def train_model(
     )
 
     print(
-        f"Masked weights after training: {model.masked_layer.weight.detach()[torch_mask==0.0]}"
+        f"Masked weights after training: {model.masked_layer.weight.detach()[torch_mask == 0.0]}"
     )
+
+    print(f"Bias after training: {model.masked_layer.bias}")
 
     return training_results

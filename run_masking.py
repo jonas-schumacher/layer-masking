@@ -56,9 +56,9 @@ def plot_true_network() -> None:
 
 
 def plot_trained_weights(
-    mask: pd.DataFrame,
-    mask_index: int,
-    trained_weights: pd.DataFrame,
+        mask: pd.DataFrame,
+        mask_index: int,
+        trained_weights: pd.DataFrame,
 ) -> None:
     g = graphviz.Digraph()
 
@@ -116,7 +116,7 @@ def create_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
     window_size = PAST_HORIZON + FORECAST_HORIZON
 
     samples = [
-        df.iloc[i : i + window_size, :]
+        df.iloc[i: i + window_size, :]
         .set_index(pd.Index(combined_steps))
         .copy(deep=True)
         for i in range(0, len(df) - window_size + 1, WINDOW_STEP)
@@ -132,8 +132,8 @@ def create_dataset() -> Tuple[pd.DataFrame, pd.DataFrame]:
 
 
 def create_masks(
-    features: pd.DataFrame,
-    targets: pd.DataFrame,
+        features: pd.DataFrame,
+        targets: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, ...]:
     base_mask = pd.DataFrame(
         index=targets.columns,
@@ -175,10 +175,10 @@ def create_masks(
 
 
 def run_training(
-    features: pd.DataFrame,
-    targets: pd.DataFrame,
-    mask: pd.DataFrame,
-    mask_index: int,
+        features: pd.DataFrame,
+        targets: pd.DataFrame,
+        mask: pd.DataFrame,
+        mask_index: int,
 ) -> pd.Series:
     training_results = train_model(
         features=features.values,
@@ -189,11 +189,11 @@ def run_training(
     loss_timeseries = pd.DataFrame(training_results.loss_timeseries).round(decimals=2)
 
     final_metrics = loss_timeseries.copy(deep=True)
-    final_metrics.columns = [f"Forecast t={col+1}" for col in final_metrics.columns]
+    final_metrics.columns = [f"Forecast t={col + 1}" for col in final_metrics.columns]
     final_metrics = final_metrics.iloc[-1].rename(f"Mask {mask_index}")
 
     loss_timeseries.columns = [
-        f"Forecast t={col+1} (final MAE = {loss_timeseries.loc[len(loss_timeseries)-1, col]})"
+        f"Forecast t={col + 1} (final MAE = {loss_timeseries.loc[len(loss_timeseries) - 1, col]})"
         for col in loss_timeseries.columns
     ]
 
@@ -221,18 +221,8 @@ def run_training(
 
     return final_metrics
 
-    # if mask_index == 0:
-    #     plot_trained_weights(
-    #         mask=mask,
-    #         mask_index="empty",
-    #         trained_weights=pd.DataFrame(
-    #             data="", columns=trained_weights.columns, index=trained_weights.index
-    #         ),
-    #     )
-
 
 def main() -> None:
-
     features, targets = create_dataset()
 
     mask0, mask1, mask2, mask3, mask4 = create_masks(

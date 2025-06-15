@@ -3,15 +3,15 @@ import torch
 
 class MaskedLayer(torch.nn.Linear):
     def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        mask: torch.Tensor,
-    ):
+            self,
+            in_features: int,
+            out_features: int,
+            mask: torch.Tensor,
+    ) -> None:
         super().__init__(
             in_features=in_features,
             out_features=out_features,
-            bias=False,  # no need to use a bias
+            bias=False,  # feel free switch the bias between True & False: it does not have a big impact on results
         )
         self.mask = mask
 
@@ -22,10 +22,10 @@ class MaskedLayer(torch.nn.Linear):
 
 class CustomModel(torch.nn.Module):
     def __init__(
-        self,
-        in_features: int,
-        out_features: int,
-        mask: torch.Tensor,
+            self,
+            in_features: int,
+            out_features: int,
+            mask: torch.Tensor,
     ) -> None:
         super(CustomModel, self).__init__()
 
